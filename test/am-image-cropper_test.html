@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>am-image-cropper test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="../am-image-cropper.html">
+  </head>
+  <body>
+
+    <test-fixture id="basic">
+      <template>
+        <am-image-cropper></am-image-cropper>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('am-image-cropper', () => {
+        let element;
+        beforeEach((done) => {
+          element = fixture('basic');
+          flush(done);
+        });
+
+        it('should instantiate', () => {
+          expect(element.localName).to.equal('am-image-cropper');
+        });
+      });
+    </script>
+
+  </body>
+</html>
