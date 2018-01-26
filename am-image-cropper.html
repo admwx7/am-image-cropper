@@ -1,0 +1,30 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="am-image-cropper">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+  </template>
+
+  <script>
+    /**
+     * `am-image-cropper`
+     * A canvas based Polymer element for generated a new cropped image from a source image
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class AmImageCropper extends Polymer.Element {
+      // eslint-disable-next-line require-jsdoc
+      static get is() {
+        return 'am-image-cropper';
+      }
+    }
+
+    window.customElements.define(AmImageCropper.is, AmImageCropper);
+  </script>
+</dom-module>

@@ -1,0 +1,21 @@
+{
+  "name": "am-image-cropper",
+  "description": "A canvas based Polymer element for generated a new cropped image from a source image",
+  "license": "GPL-3.0+",
+  "author": "Austin Murdock <admwx7@gmail.com> (https://amscripting.com)",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:admwx7/am-image-cropper"
+  },
+  "devDependencies": {
+    "eslint": "^4.16.0",
+    "eslint-config-google": "^0.9.0",
+    "eslint-plugin-chai-expect": "^1.1.0",
+    "eslint-plugin-html": "^4.0.0"
+  },
+  "scripts": {
+    "lint": "npm run lint:javascript && polymer lint",
+    "lint:javascript": "eslint . --ext js,html --ignore-path .gitignore",
+    "test": "polymer test"
+  }
+}

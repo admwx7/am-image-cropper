@@ -1,0 +1,11 @@
+> 1%
+last 3 versions
+Firefox ESR
+not Explorer <= 11
+not OperaMini all
+not Android < 62
+not BlackBerry <= 10
+not ExplorerMobile <= 11
+not UCAndroid <= 11.4
+not QQAndroid <= 1.2
+not OperaMobile < 37
