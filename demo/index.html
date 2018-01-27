@@ -14,6 +14,18 @@
 
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
+        #container {
+          display: inline-block;
+          position: relative; /* Used to restrict the bounds of the cropper */
+          border: 1px solid #E0374C;
+          user-select: none;
+        }
+        #image {
+          display: block;
+        }
+        #cropper:not([show]) {
+          display: none;
+        }
       </style>
     </custom-style>
   </head>
@@ -22,7 +34,35 @@
       <h3>Basic am-image-cropper demo</h3>
       <demo-snippet>
         <template>
-          <am-image-cropper></am-image-cropper>
+          <!-- TODO: crossOrigin shouldn't be required but it's getting "tainted" for some reason, local issue only? -->
+          <div id="container">
+            <img id="image"
+              crossOrigin="Anonymous"
+              src="https://picsum.photos/200/300"
+              draggable="false"
+            />
+            <am-image-cropper id="cropper"
+            ></am-image-cropper>
+          </div>
+          <br />
+          <button id="button">Crop</button>
+          <div id="croppedImages"></div>
+
+          <script>
+            const button = document.getElementById('button');
+            const croppedImages = document.getElementById('croppedImages');
+            const cropper = document.getElementById('cropper');
+            const image = document.getElementById('image');
+            button.addEventListener('click', () => {
+              const imgUrl = cropper.crop(image).toDataURL('image/png');
+              const croppedImage = document.createElement('img');
+              croppedImage.src = imgUrl;
+              croppedImages.appendChild(croppedImage);
+            });
+            image.addEventListener('load', () => {
+              cropper.setAttribute('show', '');
+            });
+          </script>
         </template>
       </demo-snippet>
     </div>
