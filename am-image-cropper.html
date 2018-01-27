@@ -1,18 +1,84 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/elements/dom-if.html">
 
 <dom-module id="am-image-cropper">
   <template>
     <style>
       :host {
-        display: block;
+        position: absolute;
+        display: relative;
+        top: 0;
+        left: 0;
+        width: var(--cropper-size);
+        height: var(--cropper-size);
+        border: 2px dashed var(--color);
+        cursor: move;
+
+        --color: var(--am-image-cropper-color, #E0374C);
+        --cropper-size: var(--am-image-cropper-size, 80px);
+        --cropper-handle-size: var(--am-image-cropper-handle-size, 12px);
+      }
+      [handle] {
+        background-color: var(--image-resizer-color, var(--color));
+        height: var(--cropper-handle-size);
+        width: var(--cropper-handle-size);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      [top] {
+        top: 0;
+        cursor: ns-resize;
+      }
+      [right] {
+        left: 100%;
+        cursor: ew-resize;
+      }
+      [bottom] {
+        top: 100%;
+        cursor: ns-resize;
+      }
+      [left] {
+        left: 0;
+        cursor: ew-resize;
+      }
+      [top][right] {
+        cursor: ne-resize;
+      }
+      [top][left] {
+        cursor: nw-resize;
+      }
+      [bottom][right] {
+        cursor: se-resize;
+      }
+      [bottom][left] {
+        cursor: sw-resize;
       }
     </style>
-  </template>
 
+    <dom-if if="[[!disableCornerHandles]]" on-dom-change="__registerHandles">
+      <template>
+        <div handle corner top left></div>
+        <div handle corner top right></div>
+        <div handle corner bottom right></div>
+        <div handle corner bottom left></div>
+      </template>
+    </dom-if>
+    <dom-if if="[[!disableSideHandles]]" on-dom-change="__registerHandles">
+      <template>
+        <div handle side top></div>
+        <div handle side right></div>
+        <div handle side bottom></div>
+        <div handle side left></div>
+      </template>
+    </dom-if>
+  </template>
   <script>
     /**
      * `am-image-cropper`
-     * A canvas based Polymer element for generated a new cropped image from a source image
+     * An element that the user can interact with to increase/decrease size and move around within the parent element,
+     *  used by `<am-image-cropper>` to select the portion of the image to crop to.
      *
      * @customElement
      * @polymer
@@ -23,8 +89,361 @@
       static get is() {
         return 'am-image-cropper';
       }
-    }
+      // eslint-disable-next-line require-jsdoc
+      static get properties() {
+        return {
+          /* Public Properties */
+          disableCornerHandles: {
+            type: Boolean,
+            value: false,
+          },
+          disableSideHandles: {
+            type: Boolean,
+            value: false,
+          },
+          minHeight: {
+            type: Number,
+            value: 10,
+          },
+          minWidth: {
+            type: Number,
+            value: 10,
+          },
+          moving: {
+            type: Boolean,
+            notify: true,
+            value: false,
+          },
+          resizing: {
+            type: Boolean,
+            notify: true,
+            value: false,
+          },
+          /* Read Only Properties */
+          bounds: {
+            type: Object,
+            notify: true,
+            readOnly: true,
+            observer: '__updatePosition',
+          },
+          /* Private Properties */
+          __cursor: {
+            type: Object,
+            readOnly: true,
+          },
+          __parent: {
+            type: HTMLElement,
+            readOnly: true,
+          },
+          __touches: {
+            type: Array,
+            readOnly: true,
+          },
+        };
+      }
+      /* Lifecycle Methods */
+      constructor() {
+        super();
 
+        this.center = this.center.bind(this);
+        this.drag = this.drag.bind(this);
+
+        this.__clearActions = this.updateProperty.bind(this, { properties: ['moving', 'resizing'], value: false });
+        this.__registerHandles = this.__registerHandles.bind(this);
+        this.__startMoving = this.updateProperty.bind(this, { properties: ['moving'], value: true, trackCursor: true, });
+        this.__startResizing = this.updateProperty.bind(this, { properties: ['resizing'], value: true, trackCursor: true, });
+
+        this.addEventListener('mousedown', this.__startMoving);
+        this.addEventListener('touchstart', this.__startMoving);
+      }
+      connectedCallback() {
+        super.connectedCallback();
+
+        this._set__parent(this.parentNode.shadowRoot || this.parentNode);
+      }
+
+      /* Public Methods */
+      center() {
+        const top = this.__parent.clientHeight / 2 - this.clientHeight / 2;
+        const left = this.__parent.clientWidth / 2 - this.clientWidth / 2;
+        this.generateBounds(top, left);
+      }
+      crop(image, bounds = this.bounds) {
+        const canvas = document.createElement('canvas');
+        canvas.width = bounds.width;
+        canvas.height = bounds.height;
+
+        canvas.getContext('2d').drawImage(
+          image,
+          bounds.left - image.offsetLeft,
+          bounds.top - image.offsetTop,
+          bounds.width,
+          bounds.height,
+          0,
+          0,
+          bounds.width,
+          bounds.height
+        );
+        return canvas.toDataURL('image/png');
+      }
+      drag(event) {
+        const touches = event.touches;
+        let newCursor;
+
+        if (!touches) {
+          newCursor = this._fetchCursorPosition(event);
+        } else if (touches.length === 1) {
+          newCursor = this._fetchCursorPosition(touches[0]);
+        } else if (this.__touches && touches.length > 1) {
+          event.returnValue = false;
+
+          let a = this.__touches[0].clientX - this.__touches[1].clientX;
+          a = a * a;
+          let b = this.__touches[0].clientY - this.__touches[1].clientY;
+          b = b * b;
+          const dist1 = Math.sqrt( a + b );
+
+          a = touches[0].clientX - touches[1].clientX;
+          a = a * a;
+          b = touches[0].clientY - touches[1].clientY;
+          b = b * b;
+          const dist2 = Math.sqrt( a + b );
+
+          const ratio = dist2 /dist1;
+          const width = bounds.width * ratio;
+          const height = bounds.height * ratio;
+
+          // restrict resizing to container bounds
+          const limits = this.__fetchLimits(height, width);
+          if (width < limits.width && width > this.minWidth && height < limits.height && height > this.minHeight) {
+            let top = bounds.top - (bounds.height - height) / 2;
+            if (top < limits.top) {
+              top = limits.top;
+            } else if (top > limits.bottom) {
+              top = limits.bottom;
+            }
+            let left = bounds.left - (bounds.width - width) / 2;
+            if (left < limits.left) {
+              left = limits.left;
+            } else if (left > limits.right) {
+              left = limits.right;
+            }
+            this.generateBounds(
+              top,
+              left,
+              height,
+              width
+            );
+          }
+
+          return;
+        }
+        if (this.moving) {
+          event.returnValue = false;
+          this.move(this.__cursor, newCursor);
+        } else if (this.resizing) {
+          event.returnValue = false;
+          this.resize(this.__cursor, newCursor);
+        }
+        this._set__cursor(newCursor);
+      }
+      generateBounds(top, left, height, width) {
+        top = top || this.offsetTop;
+        left = left || this.offsetLeft;
+        height = height || this.clientHeight;
+        width = width || this.clientWidth;
+        const limits = this.__fetchLimits(height, width);
+
+        // Restrict element location to parent bounds
+        if (top < limits.top) {
+          top = limits.top;
+        } else if (top > limits.bottom) {
+          top = limits.bottom;
+        }
+        if (left < limits.left) {
+          left = limits.left;
+        } else if (left > limits.right) {
+          left = limits.right;
+        }
+
+        // Return this elements bounds in relation to the parent
+        const bounds = {
+          top,
+          left,
+          height,
+          width,
+        };
+        this._setBounds(bounds);
+      }
+      resize(oldCursor, newCursor) {
+        if (!this.bounds) {
+          this.generateBounds();
+        }
+        let {top, left, height, width} = this.bounds;
+        let limits = this.__fetchLimits(height, width);
+        const aspectRatio = width / height;
+        const movement = Array.from(this.__handle.attributes).
+          map((attr) => {
+            return attr.name;
+          }).
+          filter((key) => {
+            return key === 'top' ||
+              key === 'right' ||
+              key === 'bottom' ||
+              key === 'left' ||
+              key === 'corner';
+          });
+        let xDiff = (movement.includes('left') || movement.includes('right')) ?
+          newCursor.x - oldCursor.x :
+          0;
+        let yDiff = (movement.includes('top') || movement.includes('bottom')) ?
+          newCursor.y - oldCursor.y :
+          0;
+
+        // cursor restrictions
+        if (movement.includes('top') && top <= limits.top && yDiff < 0) {
+          return;
+        }
+        if (movement.includes('right') && left >= limits.right && xDiff > 0) {
+          return;
+        }
+        if (movement.includes('bottom') && top >= limits.bottom && yDiff > 0) {
+          return;
+        }
+        if (movement.includes('left') && left <= limits.left && xDiff > 0) {
+          return;
+        }
+
+        // adjust height and width
+        let newHeight;
+        let newWidth;
+        if (movement.includes('top')) {
+          newHeight = height - yDiff;
+        }
+        if (movement.includes('right')) {
+          newWidth = width + xDiff;
+        }
+        if (movement.includes('bottom')) {
+          newHeight = height + yDiff;
+        }
+        if (movement.includes('left')) {
+          newWidth = width - xDiff;
+        }
+
+        // enforce min/max height
+        if (newHeight < this.minHeight) {
+          newHeight = this.minHeight;
+        } else if (newHeight > limits.height) {
+          newHeight = limits.height;
+        }
+
+        // enforce min/max width
+        if (newWidth < this.minWidth) {
+          newWidth = this.minWidth;
+        } else if (newWidth > limits.width) {
+          newWidth = limits.width;
+        }
+
+        // preserve aspect ratio
+        if (movement.includes('corner')) {
+          const adjustedHeight = newWidth / aspectRatio;
+          const adjustedWidth = aspectRatio * newHeight;
+
+          if (adjustedHeight >= limits.height) {
+            newHeight = limits.height;
+            newWidth = aspectRatio * newHeight;
+          } else if (adjustedWidth >= limits.width) {
+            newWidth = limits.width;
+            newHeight = newWidth / aspectRatio;
+          } else if (Math.abs(xDiff) > Math.abs(yDiff)) {
+            newHeight = adjustedHeight;
+          } else {
+            newWidth = adjustedWidth;
+          }
+        }
+
+        // shift position if needed
+        if (movement.includes('top')) {
+          top -= newHeight - height;
+        }
+        if (movement.includes('left')) {
+          left -= newWidth - width;
+        }
+
+        this.generateBounds(top, left, newHeight, newWidth);
+      }
+      move(oldCursor, newCursor) {
+        const diffX = newCursor.x - oldCursor.x;
+        const diffY = newCursor.y - oldCursor.y;
+        const top = this.offsetTop + diffY;
+        const left = this.offsetLeft + diffX;
+
+        // Restrict element movement within the parent bounds
+        this.generateBounds(top, left);
+      }
+      updateProperty(config, event) {
+        event.stopImmediatePropagation();
+        (config.properties || []).forEach((property) => {
+          this.set(property, config.value);
+        });
+        if (config.trackCursor) {
+          this._set__cursor(this._fetchCursorPosition(event));
+          if (event.touches && event.touches.length > 1) {
+            this._set__touches(event.touches);
+          }
+
+          document.addEventListener('mousemove', this.drag);
+          document.addEventListener('mouseup', this.__clearActions);
+          document.addEventListener('touchend', this.__clearActions);
+          document.addEventListener('touchmove', this.drag);
+        } else {
+          document.removeEventListener('mousemove', this.drag);
+          document.removeEventListener('mouseup', this.__clearActions);
+          document.removeEventListener('touchend', this.__clearActions);
+          document.removeEventListener('touchmove', this.drag);
+        }
+      }
+      /* Protected Methods */
+      _fetchCursorPosition(event) {
+        return {
+          x: event.clientX,
+          y: event.clientY,
+        };
+      }
+      /** Private Methods **/
+      __fetchLimits(height, width) {
+        const maxHeight = this.__parent.clientHeight;
+        const maxWidth = this.__parent.clientWidth;
+        return {
+          top: 0 - this.clientTop,
+          right: maxWidth - width - this.clientLeft,
+          bottom: maxHeight - height - this.clientTop,
+          left: 0 - this.clientLeft,
+          height: maxHeight,
+          width: maxWidth,
+        };
+      }
+      __registerHandles() {
+        const handles = this.shadowRoot.querySelectorAll('[handle]');
+
+        handles.forEach((handle) => {
+          handle.addEventListener('mousedown', (event) => {
+            this.__startResizing(event);
+            this.__handle = event.currentTarget;
+          });
+          handle.addEventListener('touchstart', (event) => {
+            this.__startResizing(event);
+            this.__handle = event.currentTarget;
+          });
+        });
+      }
+      __updatePosition(bounds) {
+        this.style.top = `${bounds.top}px`;
+        this.style.left = `${bounds.left}px`;
+        this.style.height = `${bounds.height}px`;
+        this.style.width = `${bounds.width}px`;
+      }
+    }
     window.customElements.define(AmImageCropper.is, AmImageCropper);
   </script>
 </dom-module>
