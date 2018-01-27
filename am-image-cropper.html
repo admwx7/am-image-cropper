@@ -7,53 +7,79 @@
       :host {
         position: absolute;
         display: relative;
-        top: 0;
-        left: 0;
+        top: calc(50% - var(--cropper-size) / 2);
+        left: calc(50% - var(--cropper-size) / 2);
         width: var(--cropper-size);
         height: var(--cropper-size);
         border: 2px dashed var(--color);
         cursor: move;
 
-        --color: var(--am-image-cropper-color, #E0374C);
-        --cropper-size: var(--am-image-cropper-size, 80px);
-        --cropper-handle-size: var(--am-image-cropper-handle-size, 12px);
+        --color: var(--am-image-cropper--color, #E0374C);
+        --cropper-size: var(--am-image-cropper--size, 80px);
+        --cropper-handle-size: var(--am-image-cropper__handle--size, 12px);
+
+        @apply --am-image-cropper;
       }
       [handle] {
-        background-color: var(--image-resizer-color, var(--color));
+        background-color: var(--am-image-cropper__handle--color);
         height: var(--cropper-handle-size);
         width: var(--cropper-handle-size);
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+
+        @apply --am-image-cropper__handle;
+      }
+      [handle][corner] {
+        @apply --am-image-cropper__handle--corner;
+      }
+      [handle][side] {
+        @apply --am-image-cropper__handle--side;
       }
       [top] {
         top: 0;
         cursor: ns-resize;
+
+        @apply --am-image-cropper__handle--top;
       }
       [right] {
         left: 100%;
         cursor: ew-resize;
+
+        @apply --am-image-cropper__handle--right;
       }
       [bottom] {
         top: 100%;
         cursor: ns-resize;
+
+        @apply --am-image-cropper__handle--bottom;
       }
       [left] {
         left: 0;
         cursor: ew-resize;
+
+        @apply --am-image-cropper__handle--left;
       }
       [top][right] {
         cursor: ne-resize;
+
+        @apply --am-image-cropper__handle--top-right;
       }
       [top][left] {
         cursor: nw-resize;
+
+        @apply --am-image-cropper__handle--top-left;
       }
       [bottom][right] {
         cursor: se-resize;
+
+        @apply --am-image-cropper__handle--bottom-right;
       }
       [bottom][left] {
         cursor: sw-resize;
+
+        @apply --am-image-cropper__handle--bottom-left;
       }
     </style>
 
@@ -76,9 +102,55 @@
   </template>
   <script>
     /**
-     * `am-image-cropper`
-     * An element that the user can interact with to increase/decrease size and move around within the parent element,
-     *  used by `<am-image-cropper>` to select the portion of the image to crop to.
+     * `<am-image-cropper>` A bounding box that the user an move and resize within the bounds of the parent element
+     *  (with CSS `display: relative;`), when provided a
+     *  [CanvasImageSource](https://developer.mozilla.org/en-US/docs/Web/API/CanvasImageSource) to the `crop()` method
+     *  will use the bounds of this element to trim a cropped image out of the source.
+     *
+     * ### Basic Usage
+     *
+     * Provide a source as a sibling within a container set to `display: relative`:
+     *
+     * ```html
+     * <div id="container">
+     *   <img id="image"
+     *     crossOrigin="Anonymous"
+     *     src="https://picsum.photos/200/300"
+     *     draggable="false"
+     *   />
+     *   <am-image-cropper id="cropper"
+     *   ></am-image-cropper>
+     * </div>
+     * ```
+     *
+     * Call the `crop()` method on the cropper and provide it the sibling element as the source:
+     *
+     * ```js
+     * crop() {
+     *   return this.$.cropper.crop(this.$.image);
+     * }
+     * ```
+     *
+     * ### Styling
+     *
+     * Custom property | Description | Default
+     * ----------------|-------------|----------
+     * `--am-image-cropper` | Mixin applied to the host | `{}`
+     * `--am-image-cropper--color` | Border color of the cropper | #E0374C
+     * `--am-image-cropper--size` | Starting height / width of the cropper | 80px
+     * `--am-image-cropper__handle` | Mixin applied to the handles | `{}`
+     * `--am-image-cropper__handle--bottom` | Mixin applied to all handles along the bottom of the element | `{}`
+     * `--am-image-cropper__handle--bottom-left` | Mixin applied to the handle in the bottom left corner | `{}`
+     * `--am-image-cropper__handle--bottom-right` | Mixin applied to the handle in the bottom right corner | `{}`
+     * `--am-image-cropper__handle--color` | Color of the handles defaults to the same color as the border | `var()`
+     * `--am-image-cropper__handle--corner` | Mixin applied to the handles in the 4 corners | `{}`
+     * `--am-image-cropper__handle--left` | Mixin applied to all handles along the left | `{}`
+     * `--am-image-cropper__handle--right` | Mixin applied to all handles along the right | `{}`
+     * `--am-image-cropper__handle--side` | Mixin applied to all handles on the 4 sides | `{}`
+     * `--am-image-cropper__handle--size` | The height / width of the handles | 12px
+     * `--am-image-cropper__handle--top` | Mixin applied to all handles along the top | `{}`
+     * `--am-image-cropper__handle--top-left` | Mixin applied to the handle in the top left corner | `{}`
+     * `--am-image-cropper__handle--top-right` | Mixin applied to the handle in the top right corner | `{}`
      *
      * @customElement
      * @polymer
@@ -93,33 +165,40 @@
       static get properties() {
         return {
           /* Public Properties */
+          /* Disables the handles in the four corners */
           disableCornerHandles: {
             type: Boolean,
             value: false,
           },
+          /* Disables the handles along the four sides */
           disableSideHandles: {
             type: Boolean,
             value: false,
           },
+          /* Sets the minimum height that the cropper can be resized to */
           minHeight: {
             type: Number,
             value: 10,
           },
+          /* Sets the minimum width that the cropper can be resized to */
           minWidth: {
             type: Number,
             value: 10,
           },
+          /* Notifies if this element is currently being moved by the user */
           moving: {
             type: Boolean,
             notify: true,
             value: false,
           },
+          /* Notifies if this element is currently being resized by the user */
           resizing: {
             type: Boolean,
             notify: true,
             value: false,
           },
           /* Read Only Properties */
+          /* This element's bounds, primarily used for cropping and updating position */
           bounds: {
             type: Object,
             notify: true,
@@ -127,14 +206,17 @@
             observer: '__updatePosition',
           },
           /* Private Properties */
+          /* The last recorded cursor position */
           __cursor: {
             type: Object,
             readOnly: true,
           },
+          /* The parent of this element, used for cropping and positioning */
           __parent: {
             type: HTMLElement,
             readOnly: true,
           },
+          /* The last recorded user touches, used for touch and gesture support */
           __touches: {
             type: Array,
             readOnly: true,
@@ -142,32 +224,48 @@
         };
       }
       /* Lifecycle Methods */
+      // eslint-disable-next-line require-jsdoc
       constructor() {
         super();
 
+        // Bind commonly referenced properties to `this` to ensure proper scope
         this.center = this.center.bind(this);
         this.drag = this.drag.bind(this);
-
-        this.__clearActions = this.updateProperty.bind(this, { properties: ['moving', 'resizing'], value: false });
         this.__registerHandles = this.__registerHandles.bind(this);
-        this.__startMoving = this.updateProperty.bind(this, { properties: ['moving'], value: true, trackCursor: true, });
-        this.__startResizing = this.updateProperty.bind(this, { properties: ['resizing'], value: true, trackCursor: true, });
 
+        // Create some helper functions based on `updateProperty` with preset data
+        this.__clearActions = this.updateProperty.bind(this, {properties: ['moving', 'resizing'], value: false});
+        this.__startMoving = this.updateProperty.bind(this, {properties: ['moving'], value: true, trackCursor: true});
+        this.__startResizing = this.updateProperty.bind(this, {properties: ['resizing'], value: true, trackCursor: true});
+
+        // Bind local event listeners for moving
         this.addEventListener('mousedown', this.__startMoving);
         this.addEventListener('touchstart', this.__startMoving);
       }
+      // eslint-disable-next-line require-jsdoc
       connectedCallback() {
         super.connectedCallback();
 
+        // Fetch the parent this element was attached under
         this._set__parent(this.parentNode.shadowRoot || this.parentNode);
       }
 
       /* Public Methods */
+      /**
+       * Centers this element within the parent
+       */
       center() {
         const top = this.__parent.clientHeight / 2 - this.clientHeight / 2;
         const left = this.__parent.clientWidth / 2 - this.clientWidth / 2;
         this.generateBounds(top, left);
       }
+      /**
+       * Crops the bounds out of the provided CanvasImageSource element
+       *
+       * @param {CanvasImageSource} image
+       * @param {Object} [bounds = this.bounds]
+       * @return {HTMLCanvasElement} - a canvas containing the trimmed image, used `.toDataUrl()` to get a base64 string
+       */
       crop(image, bounds = this.bounds) {
         const canvas = document.createElement('canvas');
         canvas.width = bounds.width;
@@ -184,19 +282,26 @@
           bounds.width,
           bounds.height
         );
-        return canvas.toDataURL('image/png');
+        return canvas;
       }
+      /**
+       * Used to trace the user dragging their finger or mouse across the string, only active while resizing or moving.
+       *
+       * @param {MouseEvent | TouchEvent} event
+       */
       drag(event) {
         const touches = event.touches;
         let newCursor;
 
-        if (!touches) {
+        if (!touches) { // Using a mouse event
           newCursor = this._fetchCursorPosition(event);
-        } else if (touches.length === 1) {
+        } else if (touches.length === 1) { // Using a single touch event
           newCursor = this._fetchCursorPosition(touches[0]);
-        } else if (this.__touches && touches.length > 1) {
+        } else if (this.__touches && touches.length > 1) { // Multi-touch support
+          // Prevent this event from causing a scroll or other "default" action
           event.returnValue = false;
 
+          // Calculate the direction and distance "pinched"
           let a = this.__touches[0].clientX - this.__touches[1].clientX;
           a = a * a;
           let b = this.__touches[0].clientY - this.__touches[1].clientY;
@@ -210,19 +315,19 @@
           const dist2 = Math.sqrt( a + b );
 
           const ratio = dist2 /dist1;
-          const width = bounds.width * ratio;
-          const height = bounds.height * ratio;
+          const width = this.bounds.width * ratio;
+          const height = this.bounds.height * ratio;
 
           // restrict resizing to container bounds
           const limits = this.__fetchLimits(height, width);
           if (width < limits.width && width > this.minWidth && height < limits.height && height > this.minHeight) {
-            let top = bounds.top - (bounds.height - height) / 2;
+            let top = this.bounds.top - (this.bounds.height - height) / 2;
             if (top < limits.top) {
               top = limits.top;
             } else if (top > limits.bottom) {
               top = limits.bottom;
             }
-            let left = bounds.left - (bounds.width - width) / 2;
+            let left = this.bounds.left - (this.bounds.width - width) / 2;
             if (left < limits.left) {
               left = limits.left;
             } else if (left > limits.right) {
@@ -236,17 +341,31 @@
             );
           }
 
+          // Multi-touch shouldn't trigger normal "cursor" logic
           return;
         }
-        if (this.moving) {
+
+        if (this.moving) { // Handle moving this element
+          // Prevent this event from causing a scroll or other "default" action
           event.returnValue = false;
           this.move(this.__cursor, newCursor);
-        } else if (this.resizing) {
+        } else if (this.resizing) { // Handle resizing this element
+          // Prevent this event from causing a scroll or other "default" action
           event.returnValue = false;
           this.resize(this.__cursor, newCursor);
         }
+
+        // Update last cursor reference
         this._set__cursor(newCursor);
       }
+      /**
+       * Generates and updates the user bounds, restricting the element to the limits
+       *
+       * @param {Number} [top]
+       * @param {Number} [left]
+       * @param {Number} [height]
+       * @param {Number} [width]
+       */
       generateBounds(top, left, height, width) {
         top = top || this.offsetTop;
         left = left || this.offsetLeft;
@@ -275,13 +394,22 @@
         };
         this._setBounds(bounds);
       }
+      /**
+       * Resizes this element based on the cursor actions provided, ensuring limitations are enforced
+       *
+       * @param {Object} oldCursor
+       * @param {Object} newCursor
+       */
       resize(oldCursor, newCursor) {
+        // Ensure we have starting bounds
         if (!this.bounds) {
           this.generateBounds();
         }
-        let {top, left, height, width} = this.bounds;
-        let limits = this.__fetchLimits(height, width);
+
+        const {top, left, height, width} = this.bounds;
+        const limits = this.__fetchLimits(height, width);
         const aspectRatio = width / height;
+        // Construct movement types based on the handle attributes
         const movement = Array.from(this.__handle.attributes).
           map((attr) => {
             return attr.name;
@@ -293,10 +421,11 @@
               key === 'left' ||
               key === 'corner';
           });
-        let xDiff = (movement.includes('left') || movement.includes('right')) ?
+        // Get x / y diffs, filter based on movement to ensure we aren't trying to move along the wrong axis
+        const xDiff = (movement.includes('left') || movement.includes('right')) ?
           newCursor.x - oldCursor.x :
           0;
-        let yDiff = (movement.includes('top') || movement.includes('bottom')) ?
+        const yDiff = (movement.includes('top') || movement.includes('bottom')) ?
           newCursor.y - oldCursor.y :
           0;
 
@@ -363,15 +492,23 @@
         }
 
         // shift position if needed
+        let newLeft = left;
+        let newTop = top;
         if (movement.includes('top')) {
-          top -= newHeight - height;
+          newTop -= newHeight - height;
         }
         if (movement.includes('left')) {
-          left -= newWidth - width;
+          newLeft -= newWidth - width;
         }
 
-        this.generateBounds(top, left, newHeight, newWidth);
+        this.generateBounds(newTop, newLeft, newHeight, newWidth);
       }
+      /**
+       * Moves this element based on the cursor changes
+       *
+       * @param {Object} oldCursor
+       * @param {Object} newCursor
+       */
       move(oldCursor, newCursor) {
         const diffX = newCursor.x - oldCursor.x;
         const diffY = newCursor.y - oldCursor.y;
@@ -381,6 +518,13 @@
         // Restrict element movement within the parent bounds
         this.generateBounds(top, left);
       }
+      /**
+       * A shared method that updates properties based on the provided config and will start / stop cursor / touch
+       *  tracking.
+       *
+       * @param {Object} config
+       * @param {MouseEvent | TouchEvent} event
+       */
       updateProperty(config, event) {
         event.stopImmediatePropagation();
         (config.properties || []).forEach((property) => {
@@ -392,11 +536,13 @@
             this._set__touches(event.touches);
           }
 
+          // Setup mouse / gesture listeners
           document.addEventListener('mousemove', this.drag);
           document.addEventListener('mouseup', this.__clearActions);
           document.addEventListener('touchend', this.__clearActions);
           document.addEventListener('touchmove', this.drag);
         } else {
+          // Remove mouse / gesture listeners
           document.removeEventListener('mousemove', this.drag);
           document.removeEventListener('mouseup', this.__clearActions);
           document.removeEventListener('touchend', this.__clearActions);
@@ -404,6 +550,13 @@
         }
       }
       /* Protected Methods */
+      /**
+       * Fetches the current cursor position based on the provided event
+       * @protected
+       *
+       * @param {MouseEvent | Touch} event
+       * @return {Object}
+       */
       _fetchCursorPosition(event) {
         return {
           x: event.clientX,
@@ -411,7 +564,15 @@
         };
       }
       /** Private Methods **/
-      __fetchLimits(height, width) {
+      /**
+       * Builds out the boundary limits for this element based on the provided height and width
+       * @private
+       *
+       * @param {Number} [height = this.clientHeight]
+       * @param {Number} [width = this.clientWidth]
+       * @return {Object}
+       */
+      __fetchLimits(height = this.clientHeight, width = this.clientWidth) {
         const maxHeight = this.__parent.clientHeight;
         const maxWidth = this.__parent.clientWidth;
         return {
@@ -423,6 +584,10 @@
           width: maxWidth,
         };
       }
+      /**
+       * Registers events against any handles that were attached to this element
+       * @private
+       */
       __registerHandles() {
         const handles = this.shadowRoot.querySelectorAll('[handle]');
 
@@ -437,6 +602,12 @@
           });
         });
       }
+      /**
+       * Updates the element based on the provided bounds
+       * @private
+       *
+       * @param {Object} bounds
+       */
       __updatePosition(bounds) {
         this.style.top = `${bounds.top}px`;
         this.style.left = `${bounds.left}px`;

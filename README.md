@@ -30,6 +30,19 @@ A canvas based Polymer element for generated a new cropped image from a source i
     <template>
       <script src="../webcomponentsjs/webcomponents-light.js"></script>
       <link rel="import" href="am-image-cropper.html">
+      <style>
+        #container {
+          display: inline-block;
+          position: relative;
+          border: 1px solid #E0374C;
+          user-select: none;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        #image {
+          display: block;
+        }
+      </style>
       <dom-bind>
         <template>
           <next-code-block></next-code-block>
@@ -41,6 +54,15 @@ A canvas based Polymer element for generated a new cropped image from a source i
   -->
   <!-- Add an example inside of this block -->
   ```html
+  <div id="container">
+    <img id="image"
+      crossOrigin="Anonymous"
+      src="https://picsum.photos/200/300"
+      draggable="false"
+    />
+    <am-image-cropper id="cropper"
+    ></am-image-cropper>
+  </div>
   ```
 
 ## Contributing

@@ -16,7 +16,7 @@
       <style is="custom-style" include="demo-pages-shared-styles">
         #container {
           display: inline-block;
-          position: relative;
+          position: relative; /* Used to restrict the bounds of the cropper */
           border: 1px solid #E0374C;
           user-select: none;
         }
@@ -54,7 +54,7 @@
             const cropper = document.getElementById('cropper');
             const image = document.getElementById('image');
             button.addEventListener('click', () => {
-              const imgUrl = cropper.crop(image);
+              const imgUrl = cropper.crop(image).toDataURL('image/png');
               const croppedImage = document.createElement('img');
               croppedImage.src = imgUrl;
               croppedImages.appendChild(croppedImage);
