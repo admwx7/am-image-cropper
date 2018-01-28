@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/admwx7/am-image-cropper.svg?branch=master)](https://travis-ci.org/admwx7/am-image-cropper)
 [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg?style=flat-square)](https://www.webcomponents.org/element/admwx7/am-image-cropper)
-[![GitHub license](https://img.shields.io/badge/license-GPL3-blue.svg)](https://raw.githubusercontent.com/admwx7/am-image-cropper/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://raw.githubusercontent.com/admwx7/am-image-cropper/master/LICENSE)
 
 # &lt;am-image-cropper&gt;
 
