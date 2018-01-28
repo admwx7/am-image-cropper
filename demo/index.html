@@ -31,10 +31,10 @@
           user-select: none;
           flex: 0 0 auto;
         }
-        #image {
+        #cropperBounds > img {
           display: block;
         }
-        #cropper:not([show]) {
+        am-image-cropper:not([show]) {
           display: none;
         }
       </style>
@@ -42,7 +42,7 @@
   </head>
   <body>
     <div class="vertical-section-container centered">
-      <h3>Basic am-image-cropper demo</h3>
+      <h3>Basic &lt;am-image-cropper&gt; demo</h3>
       <demo-snippet>
         <template>
           <div id="container">
@@ -83,6 +83,53 @@
             image.addEventListener('load', () => {
               cropper.setAttribute('show', '');
             });
+          </script>
+        </template>
+      </demo-snippet>
+      <h3>&lt;am-image-cropper&gt; snapshot demo</h3>
+      <demo-snippet>
+        <template>
+          <style>
+            #snapShot {
+              --am-image-cropper--size: 120px;
+            }
+          </style>
+          <div id="container">
+            <div>
+              <div id="cropperBounds">
+                <!-- TODO: crossOrigin shouldn't be required but it's getting "tainted" for some reason, local issue only? -->
+                <img id="snapShotImage"
+                  crossOrigin="Anonymous"
+                  src="https://picsum.photos/300/300"
+                  draggable="false"
+                />
+                <am-image-cropper id="snapShot"
+                  disable-corner-handles
+                  disable-side-handles
+                ></am-image-cropper>
+              </div>
+            </div>
+            <div>
+              <button id="snapShotButton">Snap Shot</button>
+            </div>
+          </div>
+
+          <script>
+            const snapShotButton = document.getElementById('snapShotButton');
+            const snapShot = document.getElementById('snapShot');
+            const snapShotImage = document.getElementById('snapShotImage');
+            function showSnapshot() {
+              console.log('show');
+              snapShot.setAttribute('show', '');
+              snapShotImage.removeEventListener('load', showSnapshot);
+            }
+            snapShotButton.addEventListener('click', () => {
+              const imgUrl = snapShot.crop(snapShotImage).toDataURL('image/png');
+              snapShotImage.src = imgUrl;
+              snapShot.removeAttribute('show');
+              snapShotButton.setAttribute('hidden', '');
+            });
+            snapShotImage.addEventListener('load', showSnapshot);
           </script>
         </template>
       </demo-snippet>
