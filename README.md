@@ -28,7 +28,7 @@ A canvas based Polymer element for generated a new cropped image from a source i
   ```
   <custom-element-demo>
     <template>
-      <script src="../webcomponentsjs/webcomponents-light.js"></script>
+      <script src="../webcomponentsjs/webcomponents-lite.js"></script>
       <link rel="import" href="am-image-cropper.html">
       <style>
         #container {
@@ -56,7 +56,6 @@ A canvas based Polymer element for generated a new cropped image from a source i
   ```html
   <div id="container">
     <img id="image"
-      crossOrigin="Anonymous"
       src="https://picsum.photos/200/300"
       draggable="false"
     />
