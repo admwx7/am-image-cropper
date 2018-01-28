@@ -118,8 +118,11 @@
             const snapShotButton = document.getElementById('snapShotButton');
             const snapShot = document.getElementById('snapShot');
             const snapShotImage = document.getElementById('snapShotImage');
+            /**
+             * Toggles the show property on for the snapShot and disables the image listener for load agianst this
+             *  function
+             */
             function showSnapshot() {
-              console.log('show');
               snapShot.setAttribute('show', '');
               snapShotImage.removeEventListener('load', showSnapshot);
             }
