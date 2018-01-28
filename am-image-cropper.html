@@ -230,13 +230,17 @@
 
         // Bind commonly referenced properties to `this` to ensure proper scope
         this.center = this.center.bind(this);
+        this.crop = this.crop.bind(this);
         this.drag = this.drag.bind(this);
+        this.generateBounds = this.generateBounds.bind(this);
+        this.resize = this.resize.bind(this);
+        this.move = this.move.bind(this);
         this.__registerHandles = this.__registerHandles.bind(this);
 
-        // Create some helper functions based on `updateProperty` with preset data
-        this.__clearActions = this.updateProperty.bind(this, {properties: ['moving', 'resizing'], value: false});
-        this.__startMoving = this.updateProperty.bind(this, {properties: ['moving'], value: true, trackCursor: true});
-        this.__startResizing = this.updateProperty.bind(this, {properties: ['resizing'], value: true, trackCursor: true});
+        // Create some helper functions based on `__updateProperty` with preset data
+        this.__clearActions = this.__updateProperty.bind(this, {properties: ['moving', 'resizing'], value: false});
+        this.__startMoving = this.__updateProperty.bind(this, {properties: ['moving'], value: true, trackCursor: true});
+        this.__startResizing = this.__updateProperty.bind(this, {properties: ['resizing'], value: true, trackCursor: true});
 
         // Bind local event listeners for moving
         this.addEventListener('mousedown', this.__startMoving);
@@ -267,6 +271,11 @@
        * @return {HTMLCanvasElement} - a canvas containing the trimmed image, used `.toDataUrl()` to get a base64 string
        */
       crop(image, bounds = this.bounds) {
+        // Ensure we have a bounds object
+        if (!bounds) {
+          bounds = this.generateBounds();
+        }
+
         const canvas = document.createElement('canvas');
         canvas.width = bounds.width;
         canvas.height = bounds.height;
@@ -366,6 +375,7 @@
        * @param {Number} [left]
        * @param {Number} [height]
        * @param {Number} [width]
+       * @return {Object}
        */
       generateBounds(top, left, height, width) {
         top = top || this.offsetTop;
@@ -394,6 +404,7 @@
           width,
         };
         this._setBounds(bounds);
+        return bounds;
       }
       /**
        * Resizes this element based on the cursor actions provided, ensuring limitations are enforced
@@ -519,37 +530,6 @@
         // Restrict element movement within the parent bounds
         this.generateBounds(top, left);
       }
-      /**
-       * A shared method that updates properties based on the provided config and will start / stop cursor / touch
-       *  tracking.
-       *
-       * @param {Object} config
-       * @param {MouseEvent | TouchEvent} event
-       */
-      updateProperty(config, event) {
-        event.stopImmediatePropagation();
-        (config.properties || []).forEach((property) => {
-          this.set(property, config.value);
-        });
-        if (config.trackCursor) {
-          this._set__cursor(this._fetchCursorPosition(event));
-          if (event.touches && event.touches.length > 1) {
-            this._set__touches(event.touches);
-          }
-
-          // Setup mouse / gesture listeners
-          document.addEventListener('mousemove', this.drag);
-          document.addEventListener('mouseup', this.__clearActions);
-          document.addEventListener('touchend', this.__clearActions);
-          document.addEventListener('touchmove', this.drag);
-        } else {
-          // Remove mouse / gesture listeners
-          document.removeEventListener('mousemove', this.drag);
-          document.removeEventListener('mouseup', this.__clearActions);
-          document.removeEventListener('touchend', this.__clearActions);
-          document.removeEventListener('touchmove', this.drag);
-        }
-      }
       /* Protected Methods */
       /**
        * Fetches the current cursor position based on the provided event
@@ -614,6 +594,38 @@
         this.style.left = `${bounds.left}px`;
         this.style.height = `${bounds.height}px`;
         this.style.width = `${bounds.width}px`;
+      }
+      /**
+       * A shared method that updates properties based on the provided config and will start / stop cursor / touch
+       *  tracking.
+       * @private
+       *
+       * @param {Object} config
+       * @param {MouseEvent | TouchEvent} event
+       */
+      __updateProperty(config, event) {
+        event.stopImmediatePropagation();
+        (config.properties || []).forEach((property) => {
+          this.set(property, config.value);
+        });
+        if (config.trackCursor) {
+          this._set__cursor(this._fetchCursorPosition(event));
+          if (event.touches && event.touches.length > 1) {
+            this._set__touches(event.touches);
+          }
+
+          // Setup mouse / gesture listeners
+          document.addEventListener('mousemove', this.drag);
+          document.addEventListener('mouseup', this.__clearActions);
+          document.addEventListener('touchend', this.__clearActions);
+          document.addEventListener('touchmove', this.drag);
+        } else {
+          // Remove mouse / gesture listeners
+          document.removeEventListener('mousemove', this.drag);
+          document.removeEventListener('mouseup', this.__clearActions);
+          document.removeEventListener('touchend', this.__clearActions);
+          document.removeEventListener('touchmove', this.drag);
+        }
       }
     }
     window.customElements.define(AmImageCropper.is, AmImageCropper);
