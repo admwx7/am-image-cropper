@@ -16,12 +16,12 @@
 
         --color: var(--am-image-cropper--color, #E0374C);
         --cropper-size: var(--am-image-cropper--size, 80px);
-        --cropper-handle-size: var(--am-image-cropper__handle--size, 12px);
+        --cropper-handle-size: var(--am-image-cropper__handle--size, 10px);
 
         @apply --am-image-cropper;
       }
       [handle] {
-        background-color: var(--am-image-cropper__handle--color);
+        background-color: var(--am-image-cropper__handle--color, var(--color));
         height: var(--cropper-handle-size);
         width: var(--cropper-handle-size);
         position: absolute;
@@ -142,12 +142,12 @@
      * `--am-image-cropper__handle--bottom` | Mixin applied to all handles along the bottom of the element | `{}`
      * `--am-image-cropper__handle--bottom-left` | Mixin applied to the handle in the bottom left corner | `{}`
      * `--am-image-cropper__handle--bottom-right` | Mixin applied to the handle in the bottom right corner | `{}`
-     * `--am-image-cropper__handle--color` | Color of the handles defaults to the same color as the border | `var()`
+     * `--am-image-cropper__handle--color` | Handle color, defaults to cropper color | `--am-image-cropper--color`
      * `--am-image-cropper__handle--corner` | Mixin applied to the handles in the 4 corners | `{}`
      * `--am-image-cropper__handle--left` | Mixin applied to all handles along the left | `{}`
      * `--am-image-cropper__handle--right` | Mixin applied to all handles along the right | `{}`
      * `--am-image-cropper__handle--side` | Mixin applied to all handles on the 4 sides | `{}`
-     * `--am-image-cropper__handle--size` | The height / width of the handles | 12px
+     * `--am-image-cropper__handle--size` | The height / width of the handles | 10px
      * `--am-image-cropper__handle--top` | Mixin applied to all handles along the top | `{}`
      * `--am-image-cropper__handle--top-left` | Mixin applied to the handle in the top left corner | `{}`
      * `--am-image-cropper__handle--top-right` | Mixin applied to the handle in the top right corner | `{}`
