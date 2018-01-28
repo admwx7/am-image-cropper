@@ -314,20 +314,20 @@
           b = b * b;
           const dist2 = Math.sqrt( a + b );
 
-          const ratio = dist2 /dist1;
+          const ratio = dist2 / dist1;
           const width = this.bounds.width * ratio;
           const height = this.bounds.height * ratio;
 
           // restrict resizing to container bounds
           const limits = this.__fetchLimits(height, width);
           if (width < limits.width && width > this.minWidth && height < limits.height && height > this.minHeight) {
-            let top = this.bounds.top - (this.bounds.height - height) / 2;
+            let top = this.bounds.top + ((this.bounds.height - height) / 2);
             if (top < limits.top) {
               top = limits.top;
             } else if (top > limits.bottom) {
               top = limits.bottom;
             }
-            let left = this.bounds.left - (this.bounds.width - width) / 2;
+            let left = this.bounds.left + (this.bounds.width - width) / 2;
             if (left < limits.left) {
               left = limits.left;
             } else if (left > limits.right) {
@@ -339,6 +339,7 @@
               height,
               width
             );
+            this._set__touches(touches);
           }
 
           // Multi-touch shouldn't trigger normal "cursor" logic
