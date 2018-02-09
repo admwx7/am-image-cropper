@@ -407,6 +407,15 @@
         return bounds;
       }
       /**
+       * Resets this element back to it's starting position
+       */
+      reset() {
+        this.style.top = '';
+        this.style.left = '';
+        this.style.height = '';
+        this.style.width = '';
+      }
+      /**
        * Resizes this element based on the cursor actions provided, ensuring limitations are enforced
        *
        * @param {Object} oldCursor
