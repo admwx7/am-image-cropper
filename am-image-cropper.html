@@ -282,8 +282,8 @@
 
         canvas.getContext('2d').drawImage(
           image,
-          bounds.left - image.offsetLeft,
-          bounds.top - image.offsetTop,
+          bounds.left - image.offsetLeft + this.clientLeft,
+          bounds.top - image.offsetTop + this.clientTop,
           bounds.width,
           bounds.height,
           0,
