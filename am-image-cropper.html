@@ -280,16 +280,22 @@
         canvas.width = bounds.width;
         canvas.height = bounds.height;
 
+        // calculate ratio for very large images
+        let ratio = 1;
+        if(image.naturalWidth){
+          ratio = image.naturalWidth / image.width;
+        }
+
         canvas.getContext('2d').drawImage(
-          image,
-          bounds.left - image.offsetLeft + this.clientLeft,
-          bounds.top - image.offsetTop + this.clientTop,
-          bounds.width,
-          bounds.height,
-          0,
-          0,
-          bounds.width,
-          bounds.height
+            image,
+            ratio * (bounds.left - image.offsetLeft + this.clientLeft),
+            ratio * (bounds.top - image.offsetTop + this.clientTop),
+            ratio * (bounds.width),
+            ratio * (bounds.height),
+            0,
+            0,
+            bounds.width,
+            bounds.height
         );
         return canvas;
       }
@@ -343,10 +349,10 @@
               left = limits.right;
             }
             this.generateBounds(
-              top,
-              left,
-              height,
-              width
+                top,
+                left,
+                height,
+                width
             );
             this._set__touches(touches);
           }
@@ -432,23 +438,23 @@
         const aspectRatio = width / height;
         // Construct movement types based on the handle attributes
         const movement = Array.from(this.__handle.attributes).
-          map((attr) => {
-            return attr.name;
-          }).
-          filter((key) => {
-            return key === 'top' ||
+        map((attr) => {
+          return attr.name;
+        }).
+        filter((key) => {
+          return key === 'top' ||
               key === 'right' ||
               key === 'bottom' ||
               key === 'left' ||
               key === 'corner';
-          });
+        });
         // Get x / y diffs, filter based on movement to ensure we aren't trying to move along the wrong axis
         const xDiff = (movement.includes('left') || movement.includes('right')) ?
-          newCursor.x - oldCursor.x :
-          0;
+            newCursor.x - oldCursor.x :
+            0;
         const yDiff = (movement.includes('top') || movement.includes('bottom')) ?
-          newCursor.y - oldCursor.y :
-          0;
+            newCursor.y - oldCursor.y :
+            0;
 
         // cursor restrictions
         if (movement.includes('top') && top <= limits.top && yDiff < 0) {
