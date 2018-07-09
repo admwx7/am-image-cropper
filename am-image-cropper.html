@@ -301,7 +301,11 @@
         canvas.height = bounds.height;
 
         // calculate ratio for very large images
-        let ratio = image.naturalWidth / image.width;
+        let ratio = 1;
+        if(image.naturalWidth){
+          ratio = image.naturalWidth / image.width;
+        }
+
         canvas.getContext('2d').drawImage(
             image,
             ratio * (bounds.left - image.offsetLeft + this.clientLeft),
