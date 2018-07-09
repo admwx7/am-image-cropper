@@ -20,6 +20,7 @@
 
         @apply --am-image-cropper;
       }
+
       [handle] {
         background-color: var(--am-image-cropper__handle--color, var(--color));
         height: var(--cropper-handle-size);
@@ -31,51 +32,61 @@
 
         @apply --am-image-cropper__handle;
       }
+
       [handle][corner] {
         @apply --am-image-cropper__handle--corner;
       }
+
       [handle][side] {
         @apply --am-image-cropper__handle--side;
       }
+
       [top] {
         top: 0;
         cursor: ns-resize;
 
         @apply --am-image-cropper__handle--top;
       }
+
       [right] {
         left: 100%;
         cursor: ew-resize;
 
         @apply --am-image-cropper__handle--right;
       }
+
       [bottom] {
         top: 100%;
         cursor: ns-resize;
 
         @apply --am-image-cropper__handle--bottom;
       }
+
       [left] {
         left: 0;
         cursor: ew-resize;
 
         @apply --am-image-cropper__handle--left;
       }
+
       [top][right] {
         cursor: ne-resize;
 
         @apply --am-image-cropper__handle--top-right;
       }
+
       [top][left] {
         cursor: nw-resize;
 
         @apply --am-image-cropper__handle--top-left;
       }
+
       [bottom][right] {
         cursor: se-resize;
 
         @apply --am-image-cropper__handle--bottom-right;
       }
+
       [bottom][left] {
         cursor: sw-resize;
 
@@ -161,6 +172,7 @@
       static get is() {
         return 'am-image-cropper';
       }
+
       // eslint-disable-next-line require-jsdoc
       static get properties() {
         return {
@@ -223,7 +235,9 @@
           },
         };
       }
+
       /* Lifecycle Methods */
+
       // eslint-disable-next-line require-jsdoc
       constructor() {
         super();
@@ -240,12 +254,17 @@
         // Create some helper functions based on `__updateProperty` with preset data
         this.__clearActions = this.__updateProperty.bind(this, {properties: ['moving', 'resizing'], value: false});
         this.__startMoving = this.__updateProperty.bind(this, {properties: ['moving'], value: true, trackCursor: true});
-        this.__startResizing = this.__updateProperty.bind(this, {properties: ['resizing'], value: true, trackCursor: true});
+        this.__startResizing = this.__updateProperty.bind(this, {
+          properties: ['resizing'],
+          value: true,
+          trackCursor: true
+        });
 
         // Bind local event listeners for moving
         this.addEventListener('mousedown', this.__startMoving);
         this.addEventListener('touchstart', this.__startMoving);
       }
+
       // eslint-disable-next-line require-jsdoc
       connectedCallback() {
         super.connectedCallback();
@@ -263,6 +282,7 @@
         const left = this.__parent.clientWidth / 2 - this.clientWidth / 2;
         this.generateBounds(top, left);
       }
+
       /**
        * Crops the bounds out of the provided CanvasImageSource element
        *
@@ -280,19 +300,22 @@
         canvas.width = bounds.width;
         canvas.height = bounds.height;
 
+        // calculate ratio for very large images
+        let ratio = image.naturalWidth / image.width;
         canvas.getContext('2d').drawImage(
-          image,
-          bounds.left - image.offsetLeft + this.clientLeft,
-          bounds.top - image.offsetTop + this.clientTop,
-          bounds.width,
-          bounds.height,
-          0,
-          0,
-          bounds.width,
-          bounds.height
+            image,
+            ratio * (bounds.left - image.offsetLeft + this.clientLeft),
+            ratio * (bounds.top - image.offsetTop + this.clientTop),
+            ratio * (bounds.width),
+            ratio * (bounds.height),
+            0,
+            0,
+            bounds.width,
+            bounds.height
         );
         return canvas;
       }
+
       /**
        * Used to trace the user dragging their finger or mouse across the string, only active while resizing or moving.
        *
@@ -315,13 +338,13 @@
           a = a * a;
           let b = this.__touches[0].clientY - this.__touches[1].clientY;
           b = b * b;
-          const dist1 = Math.sqrt( a + b );
+          const dist1 = Math.sqrt(a + b);
 
           a = touches[0].clientX - touches[1].clientX;
           a = a * a;
           b = touches[0].clientY - touches[1].clientY;
           b = b * b;
-          const dist2 = Math.sqrt( a + b );
+          const dist2 = Math.sqrt(a + b);
 
           const ratio = dist2 / dist1;
           const width = this.bounds.width * ratio;
@@ -343,10 +366,10 @@
               left = limits.right;
             }
             this.generateBounds(
-              top,
-              left,
-              height,
-              width
+                top,
+                left,
+                height,
+                width
             );
             this._set__touches(touches);
           }
@@ -368,6 +391,7 @@
         // Update last cursor reference
         this._set__cursor(newCursor);
       }
+
       /**
        * Generates and updates the user bounds, restricting the element to the limits
        *
@@ -406,6 +430,7 @@
         this._setBounds(bounds);
         return bounds;
       }
+
       /**
        * Resets this element back to it's starting position
        */
@@ -415,6 +440,7 @@
         this.style.height = '';
         this.style.width = '';
       }
+
       /**
        * Resizes this element based on the cursor actions provided, ensuring limitations are enforced
        *
@@ -431,24 +457,22 @@
         const limits = this.__fetchLimits(height, width);
         const aspectRatio = width / height;
         // Construct movement types based on the handle attributes
-        const movement = Array.from(this.__handle.attributes).
-          map((attr) => {
-            return attr.name;
-          }).
-          filter((key) => {
-            return key === 'top' ||
+        const movement = Array.from(this.__handle.attributes).map((attr) => {
+          return attr.name;
+        }).filter((key) => {
+          return key === 'top' ||
               key === 'right' ||
               key === 'bottom' ||
               key === 'left' ||
               key === 'corner';
-          });
+        });
         // Get x / y diffs, filter based on movement to ensure we aren't trying to move along the wrong axis
         const xDiff = (movement.includes('left') || movement.includes('right')) ?
-          newCursor.x - oldCursor.x :
-          0;
+            newCursor.x - oldCursor.x :
+            0;
         const yDiff = (movement.includes('top') || movement.includes('bottom')) ?
-          newCursor.y - oldCursor.y :
-          0;
+            newCursor.y - oldCursor.y :
+            0;
 
         // cursor restrictions
         if (movement.includes('top') && top <= limits.top && yDiff < 0) {
@@ -524,6 +548,7 @@
 
         this.generateBounds(newTop, newLeft, newHeight, newWidth);
       }
+
       /**
        * Moves this element based on the cursor changes
        *
@@ -539,6 +564,7 @@
         // Restrict element movement within the parent bounds
         this.generateBounds(top, left);
       }
+
       /* Protected Methods */
       /**
        * Fetches the current cursor position based on the provided event
@@ -553,6 +579,7 @@
           y: event.clientY,
         };
       }
+
       /** Private Methods **/
       /**
        * Builds out the boundary limits for this element based on the provided height and width
@@ -574,6 +601,7 @@
           width: maxWidth,
         };
       }
+
       /**
        * Registers events against any handles that were attached to this element
        * @private
@@ -592,6 +620,7 @@
           });
         });
       }
+
       /**
        * Updates the element based on the provided bounds
        * @private
@@ -604,6 +633,7 @@
         this.style.height = `${bounds.height}px`;
         this.style.width = `${bounds.width}px`;
       }
+
       /**
        * A shared method that updates properties based on the provided config and will start / stop cursor / touch
        *  tracking.
@@ -637,6 +667,7 @@
         }
       }
     }
+
     window.customElements.define(AmImageCropper.is, AmImageCropper);
   </script>
 </dom-module>
