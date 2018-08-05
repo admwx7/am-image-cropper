@@ -12,6 +12,8 @@ A canvas based Polymer element for generated a new cropped image from a source i
 | --------- | --------- | --------- | --------- | --------- | --------- | --------- |
 | Edge| last 3 versions| last 3 versions| last 3 versions| last 3 versions| last 3 versions| last version
 
+Cross-browser Testing Platform and Open Source <3 Provided by [Sauce Labs](https://saucelabs.com)
+
 ## Installation
 
   Build Tools: `npm i -g polymer-cli`
