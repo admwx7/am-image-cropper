@@ -275,22 +275,30 @@
         if (!bounds) {
           bounds = this.generateBounds();
         }
+        const borderWidth = (this.offsetWidth - this.clientWidth) / 2;
+        const borderHeight = (this.offsetHeight - this.clientHeight) / 2;
+ 
+        const widthScale = image.clientWidth / image.naturalWidth;
+        const heightScale = image.clientHeight / image.naturalHeight;
+        const croppedWidth = bounds.width / widthScale;
+        const croppedHeight = bounds.height / heightScale;
 
         const canvas = document.createElement('canvas');
-        canvas.width = bounds.width;
-        canvas.height = bounds.height;
+        canvas.width = croppedWidth;
+        canvas.height = croppedHeight;
 
         canvas.getContext('2d').drawImage(
           image,
-          bounds.left - image.offsetLeft + this.clientLeft,
-          bounds.top - image.offsetTop + this.clientTop,
-          bounds.width,
-          bounds.height,
+          (bounds.left / widthScale) + this.clientLeft + borderWidth,
+          (bounds.top / heightScale) + this.clientTop + borderHeight,
+          croppedWidth,
+          croppedHeight,
           0,
           0,
-          bounds.width,
-          bounds.height
+          croppedWidth,
+          croppedHeight
         );
+
         return canvas;
       }
       /**
