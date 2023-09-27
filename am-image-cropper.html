@@ -289,8 +289,8 @@
 
         canvas.getContext('2d').drawImage(
           image,
-          (bounds.left / widthScale) + this.clientLeft + borderWidth,
-          (bounds.top / heightScale) + this.clientTop + borderHeight,
+          (bounds.left + borderWidth) / widthScale,
+          (bounds.top + borderHeight) / heightScale,
           croppedWidth,
           croppedHeight,
           0,
